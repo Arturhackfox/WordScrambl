@@ -17,6 +17,8 @@ struct ContentView: View {
     @State private var errorMessage = ""
     @State private var showingError = false
     
+    @State private var playerScore = 0
+    
     var body: some View {
         NavigationStack{
             List() {
@@ -30,7 +32,11 @@ struct ContentView: View {
                         Image(systemName: "\(word.count).circle")
                         Text(word)
                     }
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("\(word), \(word.count) latters")
                 }
+                
+                
             }
             .navigationTitle(rootWord)
             .onSubmit(addNewWord)
@@ -39,6 +45,16 @@ struct ContentView: View {
                 Button("OK", role: .cancel){}
             } message: {
                 Text(errorMessage)
+            }
+            .toolbar{
+                Button("Shuffle") {
+                    startGame()
+                    playerScore -= 2
+                }
+            }
+            
+            VStack{
+                Text("Your score is \(playerScore)")
             }
         }
     }
@@ -61,6 +77,21 @@ struct ContentView: View {
             return
         }
         
+        guard shortNotAllowed(word: answer) else {
+            wordError(title: "It's only \(answer.count) letters", message: "Shorties not allowed")
+            return
+        }
+        
+        guard clonesNotAllowed(word: answer) else {
+            wordError(title: "Clone", message: "You're trying to use the main word")
+            return
+            
+        }
+        
+        guard addPoints(word: answer) else {
+            wordError(title: "Can't give you points", message: "Word is too short")
+             return
+        }
         
         withAnimation{
             usedWords.insert(answer, at: 0)
@@ -108,6 +139,37 @@ struct ContentView: View {
         errorTitle = title
         errorMessage = message
         showingError = true
+    }
+    
+    func shortNotAllowed (word: String) -> Bool {
+        if word.count < 3 {
+            return false
+        }
+        return true
+    }
+    
+    func clonesNotAllowed(word: String) -> Bool {
+        if rootWord == word {
+            return false
+        } else {
+            return true
+        }
+        
+    }
+    
+    func addPoints (word: String) -> Bool{
+        if word.count >= 4 {
+            playerScore += 10
+        } else if word.count >= 5 {
+            playerScore += 15
+        } else if word.count >= 6 {
+            playerScore += 20
+        } else if word.count >= 7 {
+            playerScore += 25
+        } else {
+            playerScore += 30
+        }
+        return true
     }
     
 }
